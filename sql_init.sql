@@ -1,3 +1,6 @@
+CREATE DATABASE foreo_task;
+\c foreo_task
+
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE weekly_report (
@@ -14,4 +17,4 @@ CREATE TABLE weekly_report (
 	ytd_sales REAL,
 	lytd_sales REAL,	
 	lytd_var_pct REAL
-)
+);

@@ -4,6 +4,18 @@ from math import isnan
 from db_credentials import *
 
 
+def upsert_to_db(db, data):
+    db.executemany("INSERT INTO weekly_report (store_no, store_name, ty_units, ly_units, tw_sales, lw_sales,"
+                    " lw_var_pct, ly_sales, ly_var_pct, ytd_sales, lytd_sales, lytd_var_pct)"
+                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+                    "ON CONFLICT (store_name) DO UPDATE SET "
+                    "(ty_units, ly_units, tw_sales, lw_sales,"
+                    " lw_var_pct, ly_sales, ly_var_pct, ytd_sales, lytd_sales, lytd_var_pct) = "
+                    "(EXCLUDED.ty_units, EXCLUDED.ly_units, EXCLUDED.tw_sales, EXCLUDED.lw_sales,"
+                    " EXCLUDED.lw_var_pct, EXCLUDED.ly_sales, EXCLUDED.ly_var_pct, EXCLUDED.ytd_sales, EXCLUDED.lytd_sales,"
+                    " EXCLUDED.lytd_var_pct)", data)
+
+
 def clean_data(element):
     if isnan(element):
         return 0
@@ -48,15 +60,7 @@ for line in xlsx_file.values[5:, 2:]:
 
 conn = get_conn()
 cur = conn.cursor()
-cur.executemany("INSERT INTO weekly_report (store_no, store_name, ty_units, ly_units, tw_sales, lw_sales,"
-                " lw_var_pct, ly_sales, ly_var_pct, ytd_sales, lytd_sales, lytd_var_pct)"
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-                "ON CONFLICT (store_name) DO UPDATE SET "
-                "(ty_units, ly_units, tw_sales, lw_sales,"
-                " lw_var_pct, ly_sales, ly_var_pct, ytd_sales, lytd_sales, lytd_var_pct) = "
-                "(EXCLUDED.ty_units, EXCLUDED.ly_units, EXCLUDED.tw_sales, EXCLUDED.lw_sales,"
-                " EXCLUDED.lw_var_pct, EXCLUDED.ly_sales, EXCLUDED.ly_var_pct, EXCLUDED.ytd_sales, EXCLUDED.lytd_sales,"
-                " EXCLUDED.lytd_var_pct)", tup)
+upsert_to_db(cur, tup)
 conn.commit()
 cur.close()
 conn.close()
